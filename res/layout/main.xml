@@ -1,12 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:stretchColumns="1"
+    android:id="@+id/mainLayout"
     >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/hello"
-    />
-</LinearLayout>
+    <TableRow>
+        <TextView android:id="@+id/TextView01" 
+            android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Accuracy:"></TextView>
+        <TextView android:id="@+id/gpsLat" 
+            android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Latitude"></TextView>
+    </TableRow>
+    <TableRow>
+        <TextView android:id="@+id/TextView02" 
+            android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Altitude:"></TextView>
+        <TextView android:id="@+id/gpsLon" 
+            android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Longitude"></TextView>
+    </TableRow>
+    <TableRow>
+        <TextView 
+        android:id="@+id/speed" 
+        android:layout_span="2"
+        android:layout_width="fill_parent" 
+        android:textColor="#FF0000" 
+        android:gravity="right" 
+        android:layout_height="wrap_content" 
+        android:text="145" 
+        android:textSize="190px"></TextView>
+    </TableRow>
+    <TableRow android:shrinkColumns="*">
+        <Button android:text="@+string/button" 
+            android:id="@+id/Button01" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"></Button>
+    </TableRow>
+</TableLayout>
