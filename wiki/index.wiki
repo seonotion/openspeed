@@ -1,0 +1,15 @@
+#summary Introduction
+
+= Open Speed project introduction =
+
+The basic idea was to create an app, that warms me if I am near the speed limit. The speed limit will be recorded by touching the sign on the screen. The app will store the coordinates of the sign, so next time the limit will change to the saved value automatically.
+
+My plans and ideas:
+
+ * Upload the sign to openstreetmap.org
+ * Download the signs from openstreetmap.org
+ * Save other kind of POIs to OSM, search POIs, show the direction and distance towards them.
+ * Record tracks. Show the the current track's data: time, average speed, max/min speed, etc.
+ * Upload the recorded track's to OSM.
+
+If you have a good idea, that's missing from the list, let me know.
