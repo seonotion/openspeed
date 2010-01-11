@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Hello World, mainActivity!</string>
-    <string name="app_name">Open Speed</string>
+    <string name="app_name">Doki nSpeed</string>
+<string name="text1init">A program elindult.</string>
+<string name="text2init">Nyomd meg a gombot!</string>
+<string name="button">Én vagyok a gomb</string>
 </resources>
