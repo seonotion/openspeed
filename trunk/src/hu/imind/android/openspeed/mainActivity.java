@@ -111,23 +111,20 @@ public class mainActivity extends Activity {
     public void updateGui(Location location) {
     	if (location != null) {
 			tv1.setText("Accuracy: " + location.getAccuracy());
-			tv2.setText("Altitude: " + location.getAltitude());
+			tv2.setText("Altitude: " + location.getAltitude() + " m");
 			gpsLat.setText(Double.toString(location.getLatitude()));
 			gpsLon.setText(Double.toString(location.getLongitude()));
 			tSpeed.setText(formatSpeed(location.getSpeed()));
 			currentSpeed = Math.round(location.getSpeed() * (float)3.6);
     	}
-		//tSpeed.setBackgroundColor(Color.RED);
 		if (currentSpeed > currentSpeedLimit + 10) {
-			mainLayout.setBackgroundColor(Color.RED);
+			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_2));
 			tSpeed.setTextColor(Color.BLACK);
 		} else if (currentSpeed >= currentSpeedLimit) {
-			//mainLayout.setBackgroundColor(R.color.speeding_1);
-			mainLayout.setBackgroundColor(Color.GREEN);
+			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_1));
 			tSpeed.setTextColor(Color.BLACK);
 		} else {
-			//mainLayout.setBackgroundColor(R.color.speeding_0);
-			mainLayout.setBackgroundColor(Color.BLACK);
+			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_0));
 			tSpeed.setTextColor(Color.RED);
 		}
         //Log.d(TAG, "locationListener onLocationChanged: " + location);
