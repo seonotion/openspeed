@@ -8,21 +8,25 @@
     >
     <TableRow>
         <TextView android:id="@+id/TextView01" 
-            android:layout_width="fill_parent" 
+            android:layout_width="0px" 
+            android:layout_weight="1"
             android:layout_height="wrap_content" 
             android:text="Accuracy:"></TextView>
         <TextView android:id="@+id/gpsLat" 
-            android:layout_width="fill_parent" 
+            android:layout_width="0px" 
+            android:layout_weight="1"
             android:layout_height="wrap_content" 
             android:text="Latitude"></TextView>
     </TableRow>
     <TableRow>
         <TextView android:id="@+id/TextView02" 
-            android:layout_width="fill_parent" 
+            android:layout_width="0px" 
+            android:layout_weight="1"
             android:layout_height="wrap_content" 
             android:text="Altitude:"></TextView>
         <TextView android:id="@+id/gpsLon" 
-            android:layout_width="fill_parent" 
+            android:layout_width="0px" 
+            android:layout_weight="1"
             android:layout_height="wrap_content" 
             android:text="Longitude"></TextView>
     </TableRow>
@@ -34,13 +38,18 @@
         android:textColor="#FF0000" 
         android:gravity="right" 
         android:layout_height="wrap_content" 
-        android:text="145" 
-        android:textSize="190px"></TextView>
+        android:textSize="190px" 
+        android:text="0"></TextView>
     </TableRow>
-    <TableRow android:shrinkColumns="*">
-        <Button android:text="@+string/button" 
-            android:id="@+id/Button01" 
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"></Button>
+    <TableRow>
+        <LinearLayout android:id="@+id/LinearLayout01" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_gravity="center_vertical">
+            <ToggleButton android:textOn="30"  android:textOff="30"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton30"></ToggleButton>
+            <ToggleButton android:textOn="50"  android:textOff="50"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton50"></ToggleButton>
+            <ToggleButton android:textOn="70"  android:textOff="70"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton70"></ToggleButton>
+            <ToggleButton android:textOn="90"  android:textOff="90"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton90"></ToggleButton>
+            <ToggleButton android:textOn="130" android:textOff="130" android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton130"></ToggleButton>
+        </LinearLayout>
     </TableRow>
+
+
 </TableLayout>
