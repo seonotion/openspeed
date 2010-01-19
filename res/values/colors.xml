@@ -3,4 +3,8 @@
    <color name="speeding_0">#000000</color>  <!-- Dark -->
    <color name="speeding_1">#34FF03</color>  <!-- Good speed -->
    <color name="speeding_2">#FB0B17</color>  <!-- Speeding -->
+   <color name="circle_margin">#D30E0E</color>
+   <color name="circle_inner">#FFFFFF</color>
+   <color name="circle_text">#000000</color>
+   <color name="circle_dirty">#D6D6D6</color>
 </resources>
