@@ -1,22 +1,23 @@
 package hu.imind.android.openspeed;
 
-import java.util.HashMap;
-import java.util.Iterator;
-
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 public class mainActivity extends Activity {
     /** Tag string for our debug logs */
@@ -31,8 +32,12 @@ public class mainActivity extends Activity {
 	private LocationManager mLocationManager;
 	private int currentSpeedLimit;
 	private int currentSpeed;
-	private HashMap<Integer, ToggleButton> buttons;
 	private WakeLock wl;
+	private ViewGroup linLayout;
+	private MyDrawView myDrawView;
+	private Button bMinus;
+	private Button bPlus;
+	private boolean speedLimitDirty;
 
     public class MyLocationListener implements android.location.LocationListener {
 
@@ -58,12 +63,59 @@ public class mainActivity extends Activity {
     	
     }
     
+    public class MyDrawView extends View {
+    	public MyDrawView(Context context) {
+    		super(context);
+    	}
+    	@Override 
+    	protected void onDraw(Canvas canvas) { 
+    		//canvas.drawColor(0xFFCCCCCC);     //if you want another background color
+    		
+    		Paint paint = new Paint();
+    		paint.setStrokeWidth(3);
+    		paint.setColor(getResources().getColor(R.color.circle_margin));
+    		canvas.drawCircle(100, 70, 65, paint);
+    		
+    		if (speedLimitDirty) {
+    			paint.setColor(getResources().getColor(R.color.circle_dirty));
+    		} else {
+    			paint.setColor(getResources().getColor(R.color.circle_inner));
+    		}
+    		canvas.drawCircle(100, 70, 50, paint);
+    		
+    		paint.setColor(getResources().getColor(R.color.circle_text));
+    		paint.setTextAlign(Paint.Align.CENTER);
+    		paint.setTextSize(50);
+    		canvas.drawText("" + currentSpeedLimit, 100, 87, paint);
+
+    		// refresh the canvas 
+    		//invalidate(); 
+    	}     	 
+    }
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
+        speedLimitDirty = false;
+        
         mainLayout = (ViewGroup)findViewById(R.id.mainLayout);
+        linLayout = (ViewGroup)findViewById(R.id.linear);
+        myDrawView = new MyDrawView(getBaseContext());
+		linLayout.addView(myDrawView);
+		myDrawView.setOnTouchListener(new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO do the real thing
+				Log.d(TAG, "Touch event, save the speed limit sign!");
+		        speedLimitDirty = false;
+				updateGui(null);
+				return false;
+			}
+		});
+        
         tv1 = (TextView)findViewById(R.id.TextView01);
         tv2 = (TextView)findViewById(R.id.TextView02);
         tSpeed = (TextView)findViewById(R.id.speed);
@@ -71,28 +123,24 @@ public class mainActivity extends Activity {
         gpsLon = (TextView)findViewById(R.id.gpsLon);
         
         currentSpeedLimit = 50;
-        buttons  = new HashMap<Integer, ToggleButton>();
-        buttons.put(30,  (ToggleButton)findViewById(R.id.speedButton30));
-        buttons.put(50,  (ToggleButton)findViewById(R.id.speedButton50));
-        buttons.put(70,  (ToggleButton)findViewById(R.id.speedButton70));
-        buttons.put(90,  (ToggleButton)findViewById(R.id.speedButton90));
-        buttons.put(130, (ToggleButton)findViewById(R.id.speedButton130));
+        bMinus = (Button)findViewById(R.id.buttonMinus);
+        bPlus = (Button)findViewById(R.id.buttonplus);
 
         OnClickListener speedButtonListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ToggleButton tg = (ToggleButton)v;
-				setCurrentSpeedLimit(Integer.parseInt(tg.getTextOn().toString()));
+				Button tg = (Button)v;
+				if (tg.getId() == R.id.buttonMinus) {
+					speedLimitDirty = true;
+					setCurrentSpeedLimit(currentSpeedLimit - 10);
+				} else {
+					speedLimitDirty = true;
+					setCurrentSpeedLimit(currentSpeedLimit + 10);
+				}
 			}
 		};
-        for (Iterator i = buttons.values().iterator(); i.hasNext();) {
-			ToggleButton b = (ToggleButton) i.next();
-			b.setOnClickListener(speedButtonListener);
-		}
-        ToggleButton activeButton = buttons.get(currentSpeedLimit); 
-        if (activeButton != null) {
-        	activeButton.setChecked(true);
-        }
+		bMinus.setOnClickListener(speedButtonListener);
+		bPlus.setOnClickListener(speedButtonListener);
         
         mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         mLocationListener = new MyLocationListener();
@@ -104,15 +152,7 @@ public class mainActivity extends Activity {
     }
     
     public void setCurrentSpeedLimit(int newSpeedLimit) {
-    	ToggleButton tg = buttons.get(currentSpeedLimit); 
-    	if (tg != null) {
-    		tg.setChecked(false);
-    	}
     	currentSpeedLimit = newSpeedLimit;
-    	tg = buttons.get(currentSpeedLimit); 
-    	if (tg != null) {
-    		tg.setChecked(true);
-    	}
     	updateGui(null);
     }
     
@@ -135,6 +175,7 @@ public class mainActivity extends Activity {
 			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_0));
 			tSpeed.setTextColor(Color.RED);
 		}
+		myDrawView.invalidate();
         //Log.d(TAG, "locationListener onLocationChanged: " + location);
 	}
 

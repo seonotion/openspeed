@@ -43,12 +43,11 @@
     </TableRow>
     <TableRow>
         <LinearLayout android:id="@+id/LinearLayout01" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_gravity="center_vertical">
-            <ToggleButton android:textOn="30"  android:textOff="30"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton30"></ToggleButton>
-            <ToggleButton android:textOn="50"  android:textOff="50"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton50"></ToggleButton>
-            <ToggleButton android:textOn="70"  android:textOff="70"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton70"></ToggleButton>
-            <ToggleButton android:textOn="90"  android:textOff="90"  android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton90"></ToggleButton>
-            <ToggleButton android:textOn="130" android:textOff="130" android:layout_width="0px" android:layout_weight="1" android:layout_height="wrap_content" android:id="@+id/speedButton130"></ToggleButton>
-        </LinearLayout>
+            <Button android:layout_weight="0" android:id="@+id/buttonMinus" android:text="-" android:layout_gravity="bottom" android:layout_width="60px" android:layout_height="60px"></Button>
+            <LinearLayout android:id="@+id/linear" android:layout_height="160px" android:layout_width="200px"></LinearLayout>
+            <Button android:text="+" android:layout_weight="0" android:id="@+id/buttonplus" android:layout_gravity="bottom" android:layout_height="60px" android:layout_width="60px"></Button>
+    
+</LinearLayout>
     </TableRow>
 
 
