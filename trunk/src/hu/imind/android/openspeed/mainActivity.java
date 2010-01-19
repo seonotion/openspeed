@@ -4,10 +4,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +32,7 @@ public class mainActivity extends Activity {
 	private int currentSpeedLimit;
 	private int currentSpeed;
 	private HashMap<Integer, ToggleButton> buttons;
+	private WakeLock wl;
 
     public class MyLocationListener implements android.location.LocationListener {
 
@@ -93,6 +97,10 @@ public class mainActivity extends Activity {
         mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         mLocationListener = new MyLocationListener();
         
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Wake Lock");
+        wl.acquire();
+        
     }
     
     public void setCurrentSpeedLimit(int newSpeedLimit) {
@@ -141,6 +149,7 @@ public class mainActivity extends Activity {
         long minTime = 0;
         float minDistance = 0;
         mLocationManager.requestLocationUpdates(provider, minTime, minDistance, mLocationListener);
+        wl.acquire();
         Log.d(TAG, "onResume");
     }
     
@@ -150,5 +159,6 @@ public class mainActivity extends Activity {
         super.onStop();
         Log.d(TAG, "onStop");
         mLocationManager.removeUpdates(mLocationListener);
+        wl.release();
     }
 }
