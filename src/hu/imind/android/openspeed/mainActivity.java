@@ -1,7 +1,14 @@
 package hu.imind.android.openspeed;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -38,7 +45,46 @@ public class mainActivity extends Activity {
 	private Button bMinus;
 	private Button bPlus;
 	private boolean speedLimitDirty;
+	private Location currentLocation;
 
+	
+    private static final String DATABASE_NAME = "openspeed.db";
+    private static final int DATABASE_VERSION = 2;
+	
+	/**
+     * This class helps open, create, and upgrade the database file.
+     */
+    private static class DatabaseHelper extends SQLiteOpenHelper {
+
+        DatabaseHelper(Context context) {
+            super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            db.execSQL("CREATE TABLE poi ("
+                    + "_id   INTEGER PRIMARY KEY,"
+                    + "value TEXT,"
+                    + "tag TEXT,"
+                    + "lat DOUBLE,"
+                    + "long DOUBLE,"
+                    + "bearing FLOAT,"
+                    + "speed FLOAT,"
+                    + "time DATETIME"
+                    + ");");
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
+                    + newVersion + ", which will destroy all old data");
+            db.execSQL("DROP TABLE IF EXISTS poi");
+            onCreate(db);
+        }
+    }
+
+    private DatabaseHelper mOpenHelper;
+	
     public class MyLocationListener implements android.location.LocationListener {
 
 		@Override
@@ -69,8 +115,6 @@ public class mainActivity extends Activity {
     	}
     	@Override 
     	protected void onDraw(Canvas canvas) { 
-    		//canvas.drawColor(0xFFCCCCCC);     //if you want another background color
-    		
     		Paint paint = new Paint();
     		paint.setStrokeWidth(3);
     		paint.setColor(getResources().getColor(R.color.circle_margin));
@@ -83,7 +127,11 @@ public class mainActivity extends Activity {
     		}
     		canvas.drawCircle(100, 70, 50, paint);
     		
-    		paint.setColor(getResources().getColor(R.color.circle_text));
+    		if (speedLimitDirty) {
+    			paint.setColor(getResources().getColor(R.color.circle_dirty_text));
+    		} else {
+        		paint.setColor(getResources().getColor(R.color.circle_text));
+    		}
     		paint.setTextAlign(Paint.Align.CENTER);
     		paint.setTextSize(50);
     		canvas.drawText("" + currentSpeedLimit, 100, 87, paint);
@@ -98,6 +146,8 @@ public class mainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
+        mOpenHelper = new DatabaseHelper(getBaseContext());
+        
         speedLimitDirty = false;
         
         mainLayout = (ViewGroup)findViewById(R.id.mainLayout);
@@ -108,10 +158,35 @@ public class mainActivity extends Activity {
 			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				// TODO do the real thing
 				Log.d(TAG, "Touch event, save the speed limit sign!");
 		        speedLimitDirty = false;
 				updateGui(null);
+				// save the current speed limit
+		        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+
+		        if (db == null || currentLocation == null) {
+		        	return false;
+		        }
+		        
+		        ContentValues values;
+	            values = new ContentValues();
+	            values.put("lat", currentLocation.getLatitude());
+	            values.put("long", currentLocation.getLongitude());
+	            values.put("tag", "maxspeed");
+	            values.put("value", Integer.toString(currentSpeedLimit));
+	            values.put("bearing", currentLocation.getBearing());
+	            values.put("speed", currentLocation.getSpeed() * (float)3.6);
+	            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // set the format to sql date time
+	            Date date = new Date();
+	            values.put("time", dateFormat.format(date));
+		        
+		        try{
+		        	db.insertOrThrow("poi", null, values);
+		        }catch (Exception e) {
+					// TODO: handle exception
+		        	Log.d(TAG, "Sql insert error");
+				}
+				
 				return false;
 			}
 		});
@@ -158,6 +233,7 @@ public class mainActivity extends Activity {
     
     public void updateGui(Location location) {
     	if (location != null) {
+    		currentLocation = location;
 			tv1.setText("Accuracy: " + location.getAccuracy());
 			tv2.setText("Altitude: " + location.getAltitude() + " m");
 			gpsLat.setText(Double.toString(location.getLatitude()));
