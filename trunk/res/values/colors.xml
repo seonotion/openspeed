@@ -6,5 +6,6 @@
    <color name="circle_margin">#D30E0E</color>
    <color name="circle_inner">#FFFFFF</color>
    <color name="circle_text">#000000</color>
-   <color name="circle_dirty">#D6D6D6</color>
+   <color name="circle_dirty">#40393B</color>
+   <color name="circle_dirty_text">#FFFFFF</color>
 </resources>
