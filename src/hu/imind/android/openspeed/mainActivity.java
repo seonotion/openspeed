@@ -1,5 +1,10 @@
 package hu.imind.android.openspeed;
 
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -7,6 +12,7 @@ import java.util.Date;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Canvas;
@@ -18,6 +24,9 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +34,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class mainActivity extends Activity {
     /** Tag string for our debug logs */
@@ -224,6 +234,81 @@ public class mainActivity extends Activity {
         wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Wake Lock");
         wl.acquire();
         
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	super.onCreateOptionsMenu(menu);
+    	MenuInflater menuInflater = getMenuInflater();
+    	menuInflater.inflate(R.menu.main, menu);
+    	return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	Log.d(TAG, "onOptionsItemSelected: " + item.getItemId() + " save: " + R.id.menuSaveKml);
+    	switch (item.getItemId()) {
+		case R.id.menuSaveKml:
+	        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+	        Cursor c = db.rawQuery("select * from poi", null);
+	        File dir = new File("/sdcard/openspeed/");
+	        if (! dir.exists()) {
+	        	dir.mkdirs();
+	        }
+	        File file = new File("/sdcard/openspeed/openspeed.kml");
+	        FileOutputStream out;
+	        DataOutputStream dout;
+			try {
+				out = new FileOutputStream(file);
+				dout = new DataOutputStream(out);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				Log.d(TAG, "Exeption: " + e.getMessage());
+				Toast.makeText(mainActivity.this, "Failed to save file", Toast.LENGTH_LONG).show();
+				return true;
+			}
+	        if (c != null && c.getCount() > 0) {
+	        	int count = c.getColumnCount();
+	        	StringBuffer s = new StringBuffer();
+	        	for (int i = 0; i < c.getCount(); i++) {
+	        		c.moveToNext();
+	        		s.append("<Placemark>\n");
+	        		s.append("  <name><![CDATA[(" + c.getString(1) + ")]]></name>\n");
+	        		s.append("  <description><![CDATA[");
+	        		s.append("Speed limit: " + c.getString(1) + "<br>");
+	        		s.append("Time: " + c.getString(7) + "<br>");
+	        		s.append("Actual speed: " + c.getString(6) + "<br>");
+	        		s.append(")]]></description>\n");
+	        		s.append("  <styleUrl>#sh_red-circle</styleUrl>\n");
+    				s.append("  <Point>");
+    				s.append("<coordinates>" + c.getString(4) + "," + c.getString(3) + "</coordinates>");
+    				s.append("</Point>\n");
+	        		s.append("</Placemark>\n");
+
+	        		Log.d(TAG, s.toString());
+	        		try {
+						dout.writeBytes(s.toString());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+						Log.d(TAG, "Exeption: " + e.getMessage());
+						Toast.makeText(mainActivity.this, "Failed to write in the file", Toast.LENGTH_LONG).show();
+						return true;
+					}
+	        		s.setLength(0);
+	        	}
+	        }
+
+			Toast.makeText(mainActivity.this, "KML saved to /sdcard/openspeed", Toast.LENGTH_LONG).show();
+			break;
+		case R.id.menuLoadKml:
+			Toast.makeText(getBaseContext(), "Not implemented, yet!", Toast.LENGTH_SHORT).show();
+			break;
+
+		default:
+			break;
+		}
+    	return super.onOptionsItemSelected(item);
     }
     
     public void setCurrentSpeedLimit(int newSpeedLimit) {
