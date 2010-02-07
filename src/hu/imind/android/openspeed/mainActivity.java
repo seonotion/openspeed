@@ -257,18 +257,26 @@ public class mainActivity extends Activity {
 	        }
 	        File file = new File("/sdcard/openspeed/openspeed.kml");
 	        FileOutputStream out;
-	        DataOutputStream dout;
+	        DataOutputStream dout = null;
 			try {
 				out = new FileOutputStream(file);
 				dout = new DataOutputStream(out);
+				dout.writeBytes("<?xml version='1.0' encoding='UTF-8'?>");
+				dout.writeBytes("<kml xmlns='http://earth.google.com/kml/2.0' xmlns:atom='http://www.w3.org/2005/Atom'>");
+				dout.writeBytes("<Document>");
+				dout.writeBytes("<atom:author><atom:name>Openspeed running on Android</atom:name></atom:author>");
+				dout.writeBytes("<name><![CDATA[Export]]></name>");
+				dout.writeBytes("<description><![CDATA[]]></description>");
+				dout.writeBytes("<Style id='openspeed_icon'><IconStyle><scale>1.3</scale><Icon><href>http://openspeed.googlecode.com/files/openspeed_icon.png</href></Icon><hotSpot x='32' y='1' xunits='pixels' yunits='pixels'/></IconStyle></Style>");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				Log.d(TAG, "Exeption: " + e.getMessage());
 				Toast.makeText(mainActivity.this, "Failed to save file", Toast.LENGTH_LONG).show();
 				return true;
+			} catch (IOException e) {
+				Log.d(TAG, "Count not write KML header.");
 			}
 	        if (c != null && c.getCount() > 0) {
-	        	int count = c.getColumnCount();
 	        	StringBuffer s = new StringBuffer();
 	        	for (int i = 0; i < c.getCount(); i++) {
 	        		c.moveToNext();
@@ -279,7 +287,7 @@ public class mainActivity extends Activity {
 	        		s.append("Time: " + c.getString(7) + "<br>");
 	        		s.append("Actual speed: " + c.getString(6) + "<br>");
 	        		s.append(")]]></description>\n");
-	        		s.append("  <styleUrl>#sh_red-circle</styleUrl>\n");
+	        		s.append("  <styleUrl>#openspeed_icon</styleUrl>\n");
     				s.append("  <Point>");
     				s.append("<coordinates>" + c.getString(4) + "," + c.getString(3) + "</coordinates>");
     				s.append("</Point>\n");
@@ -289,7 +297,6 @@ public class mainActivity extends Activity {
 	        		try {
 						dout.writeBytes(s.toString());
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						//e.printStackTrace();
 						Log.d(TAG, "Exeption: " + e.getMessage());
 						Toast.makeText(mainActivity.this, "Failed to write in the file", Toast.LENGTH_LONG).show();
@@ -297,6 +304,12 @@ public class mainActivity extends Activity {
 					}
 	        		s.setLength(0);
 	        	}
+	        	try {
+					dout.writeBytes("</Document>");
+					dout.writeBytes("</kml>");
+				} catch (IOException e) {
+					Log.d(TAG, "Exeption: " + e.getMessage());
+				}
 	        }
 
 			Toast.makeText(mainActivity.this, "KML saved to /sdcard/openspeed", Toast.LENGTH_LONG).show();
