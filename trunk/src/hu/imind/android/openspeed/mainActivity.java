@@ -39,11 +39,12 @@ import android.widget.Toast;
 public class mainActivity extends Activity {
     /** Tag string for our debug logs */
     private static final String TAG = "DokiNspeed";
-    private TextView tv1;
-    private TextView tv2;
-    private TextView tSpeed;
-    private TextView gpsLat;
-    private TextView gpsLon;
+    private TextView tvAccuracy;
+    private TextView tvAltitude;
+    private TextView tvSpeed;
+    private TextView tvGpsLat;
+    private TextView tvGpsLon;
+	private TextView tvDebug;
     private ViewGroup mainLayout;
 	private MyLocationListener mLocationListener;
 	private LocationManager mLocationManager;
@@ -52,11 +53,13 @@ public class mainActivity extends Activity {
 	private WakeLock wl;
 	private ViewGroup linLayout;
 	private MyDrawView myDrawView;
-	private Button bMinus;
-	private Button bPlus;
+	private Button btMinus;
+	private Button btPlus;
 	private boolean speedLimitDirty;
 	private Location currentLocation;
 
+    private DatabaseHelper mOpenHelper;
+	
 	
     private static final String DATABASE_NAME = "openspeed.db";
     private static final int DATABASE_VERSION = 2;
@@ -93,8 +96,6 @@ public class mainActivity extends Activity {
         }
     }
 
-    private DatabaseHelper mOpenHelper;
-	
     public class MyLocationListener implements android.location.LocationListener {
 
 		@Override
@@ -104,17 +105,17 @@ public class mainActivity extends Activity {
 		
 		@Override
 		public void onProviderDisabled(String provider) {
-            Log.d(TAG, "locationListener onProviderDisabled: " + provider);
+            debug(TAG, "locationListener onProviderDisabled: " + provider);
 		}
 
 		@Override
 		public void onProviderEnabled(String provider) {
-            Log.d(TAG, "locationListener onProviderEnabled: " + provider);
+            debug(TAG, "locationListener onProviderEnabled: " + provider);
 		}
 
 		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.d(TAG, "locationListener onStatusChanged: " + provider + "status: " + status);
+            debug(TAG, "locationListener onStatusChanged: " + provider + "status: " + status);
 		}
     	
     }
@@ -154,21 +155,32 @@ public class mainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.drive);
         
         mOpenHelper = new DatabaseHelper(getBaseContext());
         
         speedLimitDirty = false;
         
-        mainLayout = (ViewGroup)findViewById(R.id.mainLayout);
-        linLayout = (ViewGroup)findViewById(R.id.linear);
+        mainLayout = (ViewGroup)findViewById(R.id.layoutDrive);
+        linLayout = (ViewGroup)findViewById(R.id.layoutSign);
+        tvAccuracy = (TextView)findViewById(R.id.tvAccuracy);
+        tvAltitude = (TextView)findViewById(R.id.tvAltitude);
+        tvSpeed = (TextView)findViewById(R.id.tvSpeed);
+        tvGpsLat = (TextView)findViewById(R.id.tvGpsLat);
+        tvGpsLon = (TextView)findViewById(R.id.tvGpsLon);
+        
+        currentSpeedLimit = 50;
+        btMinus = (Button)findViewById(R.id.btMinus);
+        btPlus = (Button)findViewById(R.id.btPlus);
+        tvDebug = (TextView)findViewById(R.id.tvDebug);
+
         myDrawView = new MyDrawView(getBaseContext());
 		linLayout.addView(myDrawView);
 		myDrawView.setOnTouchListener(new OnTouchListener() {
 			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				Log.d(TAG, "Touch event, save the speed limit sign!");
+				debug(TAG, "Touch event, save the speed limit sign!");
 		        speedLimitDirty = false;
 				updateGui(null);
 				// save the current speed limit
@@ -194,38 +206,30 @@ public class mainActivity extends Activity {
 		        	db.insertOrThrow("poi", null, values);
 		        }catch (Exception e) {
 					// TODO: handle exception
-		        	Log.d(TAG, "Sql insert error");
+		        	debug(TAG, "Sql insert error");
 				}
 				
 				return false;
 			}
 		});
         
-        tv1 = (TextView)findViewById(R.id.TextView01);
-        tv2 = (TextView)findViewById(R.id.TextView02);
-        tSpeed = (TextView)findViewById(R.id.speed);
-        gpsLat = (TextView)findViewById(R.id.gpsLat);
-        gpsLon = (TextView)findViewById(R.id.gpsLon);
-        
-        currentSpeedLimit = 50;
-        bMinus = (Button)findViewById(R.id.buttonMinus);
-        bPlus = (Button)findViewById(R.id.buttonplus);
-
         OnClickListener speedButtonListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				Button tg = (Button)v;
-				if (tg.getId() == R.id.buttonMinus) {
+				if (tg.getId() == R.id.btMinus) {
 					speedLimitDirty = true;
 					setCurrentSpeedLimit(currentSpeedLimit - 10);
+					debug(TAG, "Minus pushed, speed: " + currentSpeedLimit);
 				} else {
 					speedLimitDirty = true;
 					setCurrentSpeedLimit(currentSpeedLimit + 10);
+					debug(TAG, "Plus pushed, speed: " + currentSpeedLimit);
 				}
 			}
 		};
-		bMinus.setOnClickListener(speedButtonListener);
-		bPlus.setOnClickListener(speedButtonListener);
+		btMinus.setOnClickListener(speedButtonListener);
+		btPlus.setOnClickListener(speedButtonListener);
         
         mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         mLocationListener = new MyLocationListener();
@@ -246,7 +250,7 @@ public class mainActivity extends Activity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    	Log.d(TAG, "onOptionsItemSelected: " + item.getItemId() + " save: " + R.id.menuSaveKml);
+    	debug(TAG, "onOptionsItemSelected: " + item.getItemId() + " save: " + R.id.menuSaveKml);
     	switch (item.getItemId()) {
 		case R.id.menuSaveKml:
 	        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
@@ -270,11 +274,11 @@ public class mainActivity extends Activity {
 				dout.writeBytes("<Style id='openspeed_icon'><IconStyle><scale>1.3</scale><Icon><href>http://openspeed.googlecode.com/files/openspeed_icon.png</href></Icon><hotSpot x='32' y='1' xunits='pixels' yunits='pixels'/></IconStyle></Style>");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
-				Log.d(TAG, "Exeption: " + e.getMessage());
+				debug(TAG, "Exeption: " + e.getMessage());
 				Toast.makeText(mainActivity.this, "Failed to save file", Toast.LENGTH_LONG).show();
 				return true;
 			} catch (IOException e) {
-				Log.d(TAG, "Count not write KML header.");
+				debug(TAG, "Count not write KML header.");
 			}
 	        if (c != null && c.getCount() > 0) {
 	        	StringBuffer s = new StringBuffer();
@@ -293,12 +297,12 @@ public class mainActivity extends Activity {
     				s.append("</Point>\n");
 	        		s.append("</Placemark>\n");
 
-	        		Log.d(TAG, s.toString());
+	        		debug(TAG, s.toString());
 	        		try {
 						dout.writeBytes(s.toString());
 					} catch (IOException e) {
 						//e.printStackTrace();
-						Log.d(TAG, "Exeption: " + e.getMessage());
+						debug(TAG, "Exeption: " + e.getMessage());
 						Toast.makeText(mainActivity.this, "Failed to write in the file", Toast.LENGTH_LONG).show();
 						return true;
 					}
@@ -308,7 +312,7 @@ public class mainActivity extends Activity {
 					dout.writeBytes("</Document>");
 					dout.writeBytes("</kml>");
 				} catch (IOException e) {
-					Log.d(TAG, "Exeption: " + e.getMessage());
+					debug(TAG, "Exeption: " + e.getMessage());
 				}
 	        }
 
@@ -332,26 +336,31 @@ public class mainActivity extends Activity {
     public void updateGui(Location location) {
     	if (location != null) {
     		currentLocation = location;
-			tv1.setText("Accuracy: " + location.getAccuracy());
-			tv2.setText("Altitude: " + location.getAltitude() + " m");
-			gpsLat.setText(Double.toString(location.getLatitude()));
-			gpsLon.setText(Double.toString(location.getLongitude()));
-			tSpeed.setText(formatSpeed(location.getSpeed()));
+			tvAccuracy.setText("Accuracy: " + location.getAccuracy());
+			tvAltitude.setText("Altitude: " + location.getAltitude() + " m");
+			tvGpsLat.setText(String.format("%3.8f", location.getLatitude()));
+			tvGpsLon.setText(String.format("%3.8f", location.getLongitude()));
+			tvSpeed.setText(formatSpeed(location.getSpeed()));
 			currentSpeed = Math.round(location.getSpeed() * (float)3.6);
     	}
 		if (currentSpeed > currentSpeedLimit + 10) {
 			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_2));
-			tSpeed.setTextColor(Color.BLACK);
+			tvSpeed.setTextColor(Color.BLACK);
 		} else if (currentSpeed >= currentSpeedLimit) {
 			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_1));
-			tSpeed.setTextColor(Color.BLACK);
+			tvSpeed.setTextColor(Color.BLACK);
 		} else {
 			mainLayout.setBackgroundColor(getResources().getColor(R.color.speeding_0));
-			tSpeed.setTextColor(Color.RED);
+			tvSpeed.setTextColor(Color.RED);
 		}
 		myDrawView.invalidate();
-        //Log.d(TAG, "locationListener onLocationChanged: " + location);
+        //debug(TAG, "locationListener onLocationChanged: " + location);
 	}
+    
+    public void debug(String tag, String s) {
+    	Log.d(tag, s);
+    	tvDebug.setText(s + "\n" + tvDebug.getText());
+    }
 
     private String formatSpeed(float speed) {
 		return String.format("%3.0f", speed * (float)3.6);
@@ -365,14 +374,14 @@ public class mainActivity extends Activity {
         float minDistance = 0;
         mLocationManager.requestLocationUpdates(provider, minTime, minDistance, mLocationListener);
         wl.acquire();
-        Log.d(TAG, "onResume");
+        debug(TAG, "onResume");
     }
     
     @Override
     protected void onStop() {
         //mSensorManager.unregisterListener(mGraphView);
         super.onStop();
-        Log.d(TAG, "onStop");
+        debug(TAG, "onStop");
         mLocationManager.removeUpdates(mLocationListener);
         wl.release();
     }

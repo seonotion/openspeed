@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:id="@+id/layoutDrive"
+  >
+
+  <Button android:id="@+id/btMinus"  android:layout_alignParentBottom="true" 
+      android:layout_width="60px" android:layout_height="60px"  
+      android:text="-"></Button>
+  <LinearLayout android:id="@+id/layoutSign" android:layout_toRightOf="@id/btMinus" android:layout_alignParentBottom="true" 
+      android:layout_height="160px" 
+      android:layout_width="200px" ></LinearLayout>
+  <Button android:id="@+id/btPlus"  android:layout_alignParentBottom="true" android:layout_alignParentRight="true" 
+      android:layout_height="60px" 
+      android:layout_width="60px"
+      android:text="+"></Button>
+
+  <TextView android:id="@+id/tvSpeed"  android:layout_above="@+id/layoutSign"    
+      android:layout_width="fill_parent" 
+      android:layout_height="wrap_content"
+      android:textColor="#FF0000"     
+      android:text="0" 
+      android:gravity="right"
+      android:textSize="150px"></TextView>
+
+  <TextView  android:id="@+id/tvDebug" android:layout_below="@+id/tvSpeed" android:layout_above="@+id/layoutSign" android:layout_alignParentTop="true"
+      android:layout_height="wrap_content" 
+      android:layout_width="fill_parent" 
+      android:text="Debug"></TextView>
+
+  <TextView android:id="@+id/tvAltitude" android:layout_below="@+id/tvSpeed"  android:layout_alignParentLeft="true"
+      android:layout_height="wrap_content"
+      android:layout_width="wrap_content"
+      android:text="Altitude:"></TextView>
+  <TextView android:id="@+id/tvAccuracy" android:layout_below="@+id/tvAltitude" android:layout_alignParentLeft="true" 
+      android:layout_height="wrap_content"
+      android:layout_width="wrap_content"
+      android:text="Accuracy:"></TextView>
+
+  <TextView android:id="@+id/tvGpsLat"  android:layout_below="@+id/tvSpeed" android:layout_alignParentRight="true" 
+      android:layout_height="wrap_content" 
+      android:layout_width="wrap_content"
+      android:text="Latitude:"></TextView>
+  <TextView android:id="@+id/tvGpsLon"  android:layout_below="@id/tvGpsLat"  android:layout_alignParentRight="true"
+      android:layout_height="wrap_content" 
+      android:layout_width="wrap_content" 
+      android:text="Longitude:"></TextView>
+</RelativeLayout>
