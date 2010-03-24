@@ -2,12 +2,19 @@ package hu.imind.android.openspeed;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -105,17 +112,17 @@ public class mainActivity extends Activity {
 		
 		@Override
 		public void onProviderDisabled(String provider) {
-            debug(TAG, "locationListener onProviderDisabled: " + provider);
+            debug("locationListener onProviderDisabled: " + provider);
 		}
 
 		@Override
 		public void onProviderEnabled(String provider) {
-            debug(TAG, "locationListener onProviderEnabled: " + provider);
+            debug("locationListener onProviderEnabled: " + provider);
 		}
 
 		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
-            debug(TAG, "locationListener onStatusChanged: " + provider + "status: " + status);
+            debug("locationListener onStatusChanged: " + provider + "status: " + status);
 		}
     	
     }
@@ -180,13 +187,14 @@ public class mainActivity extends Activity {
 			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				debug(TAG, "Touch event, save the speed limit sign!");
+				debug("Touch event, save the speed limit sign!");
 		        speedLimitDirty = false;
 				updateGui(null);
 				// save the current speed limit
 		        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
 		        if (db == null || currentLocation == null) {
+		        	debug("db is null: " + (db == null) + " currentLocation is null: " + (currentLocation == null));
 		        	return false;
 		        }
 		        
@@ -205,8 +213,7 @@ public class mainActivity extends Activity {
 		        try{
 		        	db.insertOrThrow("poi", null, values);
 		        }catch (Exception e) {
-					// TODO: handle exception
-		        	debug(TAG, "Sql insert error");
+		        	debug("Sql insert error");
 				}
 				
 				return false;
@@ -220,11 +227,11 @@ public class mainActivity extends Activity {
 				if (tg.getId() == R.id.btMinus) {
 					speedLimitDirty = true;
 					setCurrentSpeedLimit(currentSpeedLimit - 10);
-					debug(TAG, "Minus pushed, speed: " + currentSpeedLimit);
+					debug("Minus pushed, speed: " + currentSpeedLimit);
 				} else {
 					speedLimitDirty = true;
 					setCurrentSpeedLimit(currentSpeedLimit + 10);
-					debug(TAG, "Plus pushed, speed: " + currentSpeedLimit);
+					debug("Plus pushed, speed: " + currentSpeedLimit);
 				}
 			}
 		};
@@ -250,13 +257,14 @@ public class mainActivity extends Activity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    	debug(TAG, "onOptionsItemSelected: " + item.getItemId() + " save: " + R.id.menuSaveKml);
+    	debug("onOptionsItemSelected: " + item.getItemId() + " save: " + R.id.menuSaveKml);
     	switch (item.getItemId()) {
 		case R.id.menuSaveKml:
 	        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
 	        Cursor c = db.rawQuery("select * from poi", null);
 	        File dir = new File("/sdcard/openspeed/");
 	        if (! dir.exists()) {
+	        	debug("Creating directory: /sdcard/openspeed");
 	        	dir.mkdirs();
 	        }
 	        File file = new File("/sdcard/openspeed/openspeed.kml");
@@ -265,6 +273,7 @@ public class mainActivity extends Activity {
 			try {
 				out = new FileOutputStream(file);
 				dout = new DataOutputStream(out);
+				debug("Data output stream created.");
 				dout.writeBytes("<?xml version='1.0' encoding='UTF-8'?>");
 				dout.writeBytes("<kml xmlns='http://earth.google.com/kml/2.0' xmlns:atom='http://www.w3.org/2005/Atom'>");
 				dout.writeBytes("<Document>");
@@ -273,12 +282,11 @@ public class mainActivity extends Activity {
 				dout.writeBytes("<description><![CDATA[]]></description>");
 				dout.writeBytes("<Style id='openspeed_icon'><IconStyle><scale>1.3</scale><Icon><href>http://openspeed.googlecode.com/files/openspeed_icon.png</href></Icon><hotSpot x='32' y='1' xunits='pixels' yunits='pixels'/></IconStyle></Style>");
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				debug(TAG, "Exeption: " + e.getMessage());
+				debug("Exeption: " + e.getMessage());
 				Toast.makeText(mainActivity.this, "Failed to save file", Toast.LENGTH_LONG).show();
 				return true;
 			} catch (IOException e) {
-				debug(TAG, "Count not write KML header.");
+				debug("Count not write KML header.");
 			}
 	        if (c != null && c.getCount() > 0) {
 	        	StringBuffer s = new StringBuffer();
@@ -295,14 +303,22 @@ public class mainActivity extends Activity {
     				s.append("  <Point>");
     				s.append("<coordinates>" + c.getString(4) + "," + c.getString(3) + "</coordinates>");
     				s.append("</Point>\n");
+    				s.append("  <sqlite>");
+    				for(int j = 0; j <= 7; j++) {
+    					if (j > 0) {
+    						s.append(";");
+    					}
+    					s.append(c.getString(j));
+    				}
+    				s.append("</sqlite>\n");
 	        		s.append("</Placemark>\n");
 
-	        		debug(TAG, s.toString());
+	        		//debug(s.toString());
 	        		try {
 						dout.writeBytes(s.toString());
 					} catch (IOException e) {
 						//e.printStackTrace();
-						debug(TAG, "Exeption: " + e.getMessage());
+						debug("Exeption: " + e.getMessage());
 						Toast.makeText(mainActivity.this, "Failed to write in the file", Toast.LENGTH_LONG).show();
 						return true;
 					}
@@ -312,14 +328,63 @@ public class mainActivity extends Activity {
 					dout.writeBytes("</Document>");
 					dout.writeBytes("</kml>");
 				} catch (IOException e) {
-					debug(TAG, "Exeption: " + e.getMessage());
+					debug("Exeption: " + e.getMessage());
 				}
 	        }
 
 			Toast.makeText(mainActivity.this, "KML saved to /sdcard/openspeed", Toast.LENGTH_LONG).show();
 			break;
 		case R.id.menuLoadKml:
-			Toast.makeText(getBaseContext(), "Not implemented, yet!", Toast.LENGTH_SHORT).show();
+			InputStream in;
+			DocumentBuilder builder;
+			try {
+				String filename = "/sdcard/openspeed/openspeed.kml";
+				in = new FileInputStream(filename);
+				debug("File opened: " + filename);
+				builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+				debug("Document builder ok.");
+				Document doc=builder.parse(in, null);
+				debug("XML parse ok.");
+				NodeList placemarks = doc.getElementsByTagName("sqlite");
+				debug("Sign list loaded: " + placemarks.getLength());
+				
+				String csv;
+				String[] csvs;
+		        ContentValues values;
+	            values = new ContentValues();
+		        SQLiteDatabase db2 = mOpenHelper.getWritableDatabase();
+		        if (db2 == null) {
+		        	debug("db is null: " + (db2 == null));
+		        	return false;
+		        }
+				
+		        db2.execSQL("delete from poi");
+		        debug("poi data deleted.");
+
+				for (int i = 0; i < placemarks.getLength(); i++) {
+					csv = placemarks.item(i).getFirstChild().getNodeValue();
+					csvs = csv.split(";", 8);
+
+					values.put("_id", csvs[0]);
+		            values.put("value", csvs[1]);
+		            values.put("tag", csvs[2]);
+		            values.put("lat", csvs[3]);
+		            values.put("long", csvs[4]);
+		            values.put("bearing", csvs[5]);
+		            values.put("speed", csvs[6]);
+		            values.put("time", csvs[7]);
+
+			        try{
+			        	db2.insertOrThrow("poi", null, values);
+			        }catch (Exception e) {
+			        	debug("Sql insert error: " + e.getMessage());
+			        	debug("sqlite: " + csv);
+					}
+				}
+			} catch (Exception e) {
+				debug(e.getMessage());
+			}
+			Toast.makeText(getBaseContext(), "Kml imported!", Toast.LENGTH_SHORT).show();
 			break;
 
 		default:
@@ -354,12 +419,19 @@ public class mainActivity extends Activity {
 			tvSpeed.setTextColor(Color.RED);
 		}
 		myDrawView.invalidate();
-        //debug(TAG, "locationListener onLocationChanged: " + location);
+        //debug("locationListener onLocationChanged: " + location);
 	}
     
-    public void debug(String tag, String s) {
-    	Log.d(tag, s);
-    	tvDebug.setText(s + "\n" + tvDebug.getText());
+    public void debug(String s) {
+    	debug(s, false);
+    }
+    public void debug(String s, boolean nonewline) {
+    	Log.d(TAG, s);
+    	if (nonewline) {
+    		tvDebug.setText(s + tvDebug.getText());
+    	} else {
+    		tvDebug.setText(s + "\n" + tvDebug.getText());
+    	}
     }
 
     private String formatSpeed(float speed) {
@@ -374,14 +446,14 @@ public class mainActivity extends Activity {
         float minDistance = 0;
         mLocationManager.requestLocationUpdates(provider, minTime, minDistance, mLocationListener);
         wl.acquire();
-        debug(TAG, "onResume");
+        debug("onResume");
     }
     
     @Override
     protected void onStop() {
         //mSensorManager.unregisterListener(mGraphView);
         super.onStop();
-        debug(TAG, "onStop");
+        debug("onStop");
         mLocationManager.removeUpdates(mLocationListener);
         wl.release();
     }
